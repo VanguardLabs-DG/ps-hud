@@ -5,6 +5,7 @@ type compassStatus = {
   show: boolean,
   street1: string,
   street2: string,
+  zone: string,
   showCompass: boolean,
   showStreets: boolean,
   showPointer: boolean,
@@ -20,6 +21,7 @@ const store = () => {
     show: false,
     street1: "",
     street2: "",
+    zone: "",
     showCompass: true,
     showStreets: true,
     showPointer: true,
@@ -35,6 +37,7 @@ const store = () => {
         state.showCompass = data.showCompass;
         state.street1 = data.street1;
         state.street2 = data.street2;
+        state.zone = (data as any).zone || "";
         state.showStreets = data.showStreets;
         state.showPointer = data.showPointer;
         state.showDegress = data.showDegress;

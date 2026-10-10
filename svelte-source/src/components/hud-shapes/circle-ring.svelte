@@ -13,7 +13,7 @@
   export let iconScaling: number = 0.45;
   export let iconTranslateX: number = 0;
   export let iconTranslateY: number = 0;
-  export let innerColor: string = "#212121";
+  export let innerColor: string = "transparent";
   export let name: string = "";
   export let outlineColor: string = "red";
   export let outlineContrast: number = 100;
@@ -61,17 +61,19 @@
     { rotateDegree > 0 ? "rotate("+rotateDegree+" "+radius+" "+radius+")": ""}
     { "translate("+translateX+" "+translateY+")" }"
   >
-    <circle
-      fill={innerColor}
-      stroke="transparent"
-      stroke-dashoffset={0}
-      stroke-dasharray={circumference +' ' + circumference}
-      stroke-width={ringSize-0.6}
-      r={normalizedRadius - (ringSize/2) + 0.1}
-      cx={radius}
-      cy={radius}
-      transform="rotate(-90, {radius}, {radius})"
-    />
+    {#if innerColor && innerColor !== 'transparent' && innerColor !== '#212121' && innerColor !== '#212121FF'}
+      <circle
+        fill={innerColor}
+        stroke="transparent"
+        stroke-dashoffset={0}
+        stroke-dasharray={circumference +' ' + circumference}
+        stroke-width={ringSize-0.6}
+        r={normalizedRadius - (ringSize/2) + 0.1}
+        cx={radius}
+        cy={radius}
+        transform="rotate(-90, {radius}, {radius})"
+      />
+    {/if}
     {#if displayOutline}
     <circle
       fill="transparent"

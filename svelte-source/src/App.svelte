@@ -2,14 +2,15 @@
   import { onDestroy } from 'svelte';
   import MenuStore from "./stores/menuStore";
   import { EventHandler } from "./utils/eventHandler";
-  import MetaLayout from "./components/meta-layout.svelte";
+  import CreativeStatusHud from "./components/CreativeStatusHud.svelte";
+  import CreativeTopHud from "./components/CreativeTopHud.svelte";
   import Menu from "./components/menu.svelte";
   import DebugStore from './stores/debugStore';
   import PlayerHudStore from './stores/playerStatusHudStore';
   import MapBorder from "./components/map-border-hud.svelte";
   import CompassHud from './components/compass-hud.svelte';
   import MoneyHud from './components/money-hud.svelte';
-  import VehicleHud from './components/vehicle-hud.svelte';
+  import CreativeDriftSpeedometer from './components/CreativeDriftSpeedometer.svelte';
 
   EventHandler();
 
@@ -46,14 +47,16 @@
   <link href="https://fonts.cdnfonts.com/css/pricedown" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Yantramanav:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;0,900;1,800;1,900&display=swap" rel="stylesheet">
 </svelte:head>
 
 <main class="{DebugStore ? 'bg-dark-300' :'bg-transparent'} min-h-screen">
   {#if !$MenuStore.isCineamticModeChecked }
     <CompassHud />
     <MoneyHud />
-    <MetaLayout />
-    <VehicleHud />
+    <CreativeTopHud />
+    <CreativeStatusHud />
+    <CreativeDriftSpeedometer />
     <MapBorder />
   {/if}
   <Menu />

@@ -6,6 +6,12 @@ type vehicleStatusType = {
   altitude: number,
   fuel: number,
   speed: number,
+  rpm: number,
+  gear: string | number,
+  engine: number,
+  locked: boolean,
+  headlight: boolean | string,
+  seatbelt: boolean,
   show: boolean,
   showAltitude: boolean,
   showSeatBelt: boolean,
@@ -22,11 +28,16 @@ type vehicleHudUpdateMessageType = {
   seatbelt: boolean,
   speed: number,
   fuel: number,
-  altitude: number,
-  showAltitude: boolean,
-  showSeatbelt: boolean,
-  showSquareB: boolean,
-  showCircleB: boolean, 
+  rpm?: number,
+  gear?: string | number,
+  engine?: number,
+  locked?: boolean,
+  headlight?: boolean | string,
+  altitude?: number,
+  showAltitude?: boolean,
+  showSeatbelt?: boolean,
+  showSquareB?: boolean,
+  showCircleB?: boolean, 
 }
 
 type vehicleHudShowMessage = {
@@ -40,8 +51,14 @@ const store = () => {
   const vehicleStatusState: vehicleStatusType = {
     fuelColor: "#FFFFFF",
     altitude: 0,
-    fuel: 0,
+    fuel: 100,
     speed: 0,
+    rpm: 0,
+    gear: "N",
+    engine: 1000,
+    locked: false,
+    headlight: false,
+    seatbelt: false,
     show: false,
     showAltitude: false,
     showSeatBelt: false,
@@ -58,30 +75,31 @@ const store = () => {
     receiveShowMessage(data: vehicleHudShowMessage) {
       update(state => {
         state.show = data.show;
-        state.showSeatBelt = data.seatbelt;
+        state.seatbelt = data.seatbelt ?? false;
+        state.showSeatBelt = !data.seatbelt;
         return state;
       })
     },
     receiveUpdateMessage(data: vehicleHudUpdateMessageType) {
       update(state => {
         state.show = data.show;
-        state.speed = data.speed;
-        state.altitude = data.altitude;
-        state.fuel = capAmountToHundred(data.fuel);
-        state.showSeatBelt = data.showSeatbelt;
-        state.showAltitude = data.showAltitude;
-        state.showSquareBorder = data.showSquareB;
-        state.showCircleBorder = data.showCircleB;
+        state.speed = data.speed ?? 0;
+        state.rpm = typeof data.rpm === 'number' ? data.rpm : 0;
+        state.gear = data.gear !== undefined ? data.gear : "N";
+        state.engine = typeof data.engine === 'number' ? data.engine : 1000;
+        state.locked = data.locked === true;
+        state.headlight = data.headlight ?? false;
+        state.seatbelt = data.seatbelt === true;
+        state.altitude = data.altitude ?? 0;
+        state.fuel = capAmountToHundred(data.fuel ?? 100);
+        state.showSeatBelt = !data.seatbelt;
+        state.showAltitude = data.showAltitude ?? false;
+        state.showSquareBorder = data.showSquareB ?? false;
+        state.showCircleBorder = data.showCircleB ?? false;
 
-        if (data.seatbelt) {
-          state.showSeatBelt = false;
-        } else {
-          state.showSeatBelt = true;
-        }
-
-        if (data.fuel <= 20) {
+        if (state.fuel <= 20) {
           state.fuelColor = "#ff0000";
-        } else if (data.fuel <= 30) {
+        } else if (state.fuel <= 30) {
           state.fuelColor = "#dd6e14";
         } else {
           state.fuelColor = "#FFFFFF";

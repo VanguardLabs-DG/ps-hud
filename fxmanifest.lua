@@ -4,8 +4,15 @@ game 'gta5'
 description 'ps-hud'
 version '2.1.2'
 
+dependencies {
+	'ox_lib',
+	'qbx_core'
+}
+
 shared_scripts {
-	'@qb-core/shared/locale.lua',
+	'@ox_lib/init.lua',
+	'@vanguard_lib/init.lua',
+	'@qbx_core/shared/locale.lua',
 	'locales/en.lua',
 	'locales/*.lua',
 	'config.lua',

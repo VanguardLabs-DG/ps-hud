@@ -18,6 +18,12 @@ export type playerStatusType = {
   show: boolean,
   showingOrder: Array<keyof playerHudIcons>,
   dynamicIcons: dynamicIcons,
+  stamina: number,
+  citizenid: string,
+  voiceMode: number,
+  radioChannel: number,
+  radioTalking: boolean,
+  talking: boolean,
 }
 
 type playerHudShowMessageType = {
@@ -56,6 +62,9 @@ type playerHudUpdateMessageType = {
   engine: number,
   cinematic: boolean,
   dev: boolean,
+  stamina?: number,
+  citizenid?: string | number,
+  voiceMode?: number,
 }
   
 const store = () => {
@@ -101,6 +110,12 @@ const store = () => {
       }),
       saveUIState: "ready",
       show: false,
+      stamina: 100,
+      citizenid: "1",
+      voiceMode: 2,
+      radioChannel: 0,
+      radioTalking: false,
+      talking: false,
       showingOrder: ["voice", "health", "armor", "hunger", "thirst", "stress", "oxygen", "armed",
         "parachute", "engine", "harness", "cruise", "nitro", "dev"],
     }
@@ -280,6 +295,12 @@ const store = () => {
         state.icons.cruise.progressValue = capAmountToHundred(data.speed);
         // This needs to be a number so default to 0
         state.icons.nitro.progressValue = capAmountToHundred(data.nos || 0);
+        state.stamina = data.stamina != null ? capAmountToHundred(data.stamina) : 100;
+        state.citizenid = data.citizenid != null ? String(data.citizenid) : (state.citizenid || "1");
+        state.voiceMode = data.voiceMode != null ? Math.max(1, Math.min(4, Number(data.voiceMode))) : (state.voiceMode || 2);
+        state.radioChannel = data.radioChannel != null ? Number(data.radioChannel) : 0;
+        state.radioTalking = !!data.radioTalking;
+        state.talking = !!data.talking;
 
         state.icons.health.isShowing = methods.staticGenericHundredHandleShow(state.dynamicIcons.health, state.icons.health.progressValue);
 

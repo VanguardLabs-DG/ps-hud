@@ -128,10 +128,10 @@ export class ringIcon extends baseIcon implements ringIconProps {
         this.ringSize = 6;
         break;
       case "diamond-ring":
-        this.height = 60;
-        this.width = 60;
-        this.iconScaling = 0.3;
-        this.ringSize = 1.5;
+        this.height = 56;
+        this.width = 56;
+        this.iconScaling = 0.44;
+        this.ringSize = 2;
         break;
       case "hexagon-ring":
         this.iconScaling = 0.4;
@@ -243,7 +243,7 @@ export type optionalHudIconMetaShapeType = optionalHudIconType & Partial<colorNa
 
 export type optionalPlayerHudIconsType = Partial<{ [Property in keyof playerHudIcons]: optionalHudIconType }>;
 
-const DEFAULTICONSHAPE: shapekind = "circle-ring";
+const DEFAULTICONSHAPE: shapekind = "diamond-ring";
 
 export function defaultHudIcon(name: string = "", showing: boolean = false, icon: object = null): any {
   return createShapeIcon(DEFAULTICONSHAPE, { isShowing: showing, icon: icon, name: name });
@@ -298,7 +298,7 @@ const percentToHex = (percentage: number): string => {
 }
 
 export function defaultColorEffect(name: string, progressColor: string, outlineColor: string = "",
-  iconColor: string = "#FFFFFFFF", innerColor: string = "#212121FF"): colorEffect {
+  iconColor: string = "#FFFFFFFF", innerColor: string = "transparent"): colorEffect {
 
   return {
     iconColor: iconColor,

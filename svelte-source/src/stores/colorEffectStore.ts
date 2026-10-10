@@ -46,51 +46,51 @@ const store = () => {
           currentEffect: 0,
           colorEffects: [
             defaultColorEffect("not-talking", "#FFFFFF"),
-            defaultColorEffect("talking", "#FFFF3E"),
-            defaultColorEffect("radio-talking", "#D64763"),
+            defaultColorEffect("talking", "#52FF97"),
+            defaultColorEffect("radio-talking", "#319BFF"),
           ],
           editableColors: defaultEditableColor(),
         }),
         health: getLocalStorage("health", {
           currentEffect: 0,
           colorEffects: [
-            defaultColorEffect("alive", "#21ab61"),
-            defaultColorEffect("dead", "#ff0000"),
+            defaultColorEffect("alive", "#DC0616"),
+            defaultColorEffect("dead", "#76030C"),
           ],
           editableColors: defaultEditableColor(),
         }),
         armor: getLocalStorage("armor", {
           currentEffect: 0,
           colorEffects: [
-            defaultColorEffect("armor", "#326dbf"),
-            defaultColorEffect("no-armor", "#ff0000")
+            defaultColorEffect("armor", "#3B82F6"),
+            defaultColorEffect("no-armor", "#1D4ED8")
           ],
           editableColors: defaultEditableColor(),
         }),
         hunger: getLocalStorage("hunger", {
           currentEffect: 0,
           colorEffects: [
-            defaultColorEffect("normal", "#dd6e14"),
-            defaultColorEffect("starving", "#ff0000"),
+            defaultColorEffect("normal", "#F97316"),
+            defaultColorEffect("starving", "#C2410C"),
           ],
           editableColors: defaultEditableColor(),
         }),
         thirst: getLocalStorage("thirst", {
           currentEffect: 0,
           colorEffects: [
-            defaultColorEffect("normal", "#1a7cad"),
-            defaultColorEffect("thirsty", "#ff0000"),
+            defaultColorEffect("normal", "#06B6D4"),
+            defaultColorEffect("thirsty", "#0E7490"),
           ],
           editableColors: defaultEditableColor(),
         }),
         stress: getLocalStorage("stress", {
           currentEffect: 0,
-          colorEffects: [defaultColorEffect("normal", "#dc0606")],
+          colorEffects: [defaultColorEffect("normal", "#F43F5E")],
           editableColors: defaultEditableColor(),
         }),
         oxygen: getLocalStorage("oxygen", {
           currentEffect: 0,
-          colorEffects: [defaultColorEffect("normal", "#8aa8bd")],
+          colorEffects: [defaultColorEffect("normal", "#84CC16")],
           editableColors: defaultEditableColor(),
         }),
         armed: getLocalStorage("armed", {
