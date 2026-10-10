@@ -1520,9 +1520,11 @@ CreateThread(function()
     local lastInVehicle = false
 	while true do
         if LocalPlayer.state.isLoggedIn then
-            Wait(400)
-            local show = true
             local player = PlayerPedId()
+            local playerInVehcile = IsPedInAnyVehicle(player, false)
+            local sleep = playerInVehcile and 60 or 250
+            Wait(sleep)
+            local show = true
             local camRot = GetGameplayCamRot(0)
 
             if Menu.isCompassFollowChecked then
@@ -1534,8 +1536,6 @@ CreateThread(function()
             if heading == '360' then
                 heading = '0'
             end
-
-            local playerInVehcile = IsPedInAnyVehicle(player)
 
             if heading ~= lastHeading or lastInVehicle ~= playerInVehcile then
                 if playerInVehcile then

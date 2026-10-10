@@ -33,12 +33,24 @@
 
   $: coordString = `left = ${circleLeft.toFixed(2)}vh, bottom = ${circleBottom.toFixed(2)}vh, width = ${circleWidth.toFixed(2)}vh, height = ${circleHeight.toFixed(2)}vh, border = ${circleBorderWidth.toFixed(1)}px`;
 
-  // Compass Telemetry Calculation (Heading-Up radar mathematical projection)
-  $: worldHeading = (($CompassHudStore.heading + 90) % 360 + 360) % 360;
-  $: northAngle = (360 - worldHeading) % 360;
-  $: eastAngle = (northAngle + 90) % 360;
-  $: southAngle = (northAngle + 180) % 360;
-  $: westAngle = (northAngle + 270) % 360;
+  // Shortest angular difference between target and current (-180 to +180)
+  function shortestAngleDiff(target: number, current: number): number {
+    return ((target - current + 540) % 360) - 180;
+  }
+
+  let currentAngle = 0;
+  let targetAngle = 0;
+  let lastTargetAngle = 0;
+  let turnVelocity = 0; // deg per second
+  let lastPacketTimestamp = 0;
+  let animFrameId: number | null = null;
+  let isRunning = false;
+  let lastFrameTime = 0;
+
+  let northPos = { left: 50, top: 0 };
+  let eastPos = { left: 100, top: 50 };
+  let southPos = { left: 50, top: 100 };
+  let westPos = { left: 0, top: 50 };
 
   function getCoord(angleDeg: number) {
     const rad = (angleDeg * Math.PI) / 180;
@@ -48,10 +60,12 @@
     };
   }
 
-  $: northPos = getCoord(northAngle);
-  $: eastPos = getCoord(eastAngle);
-  $: southPos = getCoord(southAngle);
-  $: westPos = getCoord(westAngle);
+  function updateMarkers(angle: number) {
+    northPos = getCoord(angle);
+    eastPos = getCoord((angle + 90) % 360);
+    southPos = getCoord((angle + 180) % 360);
+    westPos = getCoord((angle + 270) % 360);
+  }
 
   function getCardinal(deg: number): string {
     const cardinals = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
@@ -59,8 +73,69 @@
     return cardinals[index];
   }
 
-  $: cardinalName = getCardinal(worldHeading);
-  $: headingFormatted = String(Math.round(worldHeading)).padStart(3, '0') + '°';
+  $: rawHeading = (($CompassHudStore.heading + 90) % 360 + 360) % 360;
+
+  // React to new incoming heading packets from telemetry with turn velocity estimation
+  $: {
+    const newTarget = (360 - rawHeading) % 360;
+    const now = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+    if (lastPacketTimestamp > 0) {
+      const dt = Math.max(0.016, (now - lastPacketTimestamp) / 1000);
+      const delta = shortestAngleDiff(newTarget, lastTargetAngle);
+      // Filtered turn velocity in deg/s
+      turnVelocity = turnVelocity * 0.35 + (delta / dt) * 0.65;
+    }
+    lastTargetAngle = targetAngle;
+    targetAngle = newTarget;
+    lastPacketTimestamp = now;
+
+    if (!isRunning && ($VehicleHudStore.show || DebugStore || isCalibrating)) {
+      startLoop();
+    }
+  }
+
+  function renderFrame(now: number) {
+    if (!($VehicleHudStore.show || DebugStore || isCalibrating)) {
+      isRunning = false;
+      return;
+    }
+
+    if (!lastFrameTime) lastFrameTime = now;
+    const dt = Math.min(0.05, Math.max(0.001, (now - lastFrameTime) / 1000));
+    lastFrameTime = now;
+
+    // Direction prediction: lead ahead by ~45ms based on turning velocity
+    const lead = Math.max(-30, Math.min(30, turnVelocity * 0.045));
+    const predictedTarget = targetAngle + lead;
+    const predictedDiff = shortestAngleDiff(predictedTarget, currentAngle);
+
+    // Frame-rate independent exponential smoothing factor (lambda = 15)
+    const lerpFactor = 1 - Math.exp(-15 * dt);
+
+    currentAngle = (currentAngle + predictedDiff * lerpFactor + 360) % 360;
+    updateMarkers(currentAngle);
+
+    animFrameId = requestAnimationFrame(renderFrame);
+  }
+
+  function startLoop() {
+    if (isRunning) return;
+    isRunning = true;
+    lastFrameTime = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+    animFrameId = requestAnimationFrame(renderFrame);
+  }
+
+  function stopLoop() {
+    if (animFrameId) {
+      cancelAnimationFrame(animFrameId);
+      animFrameId = null;
+    }
+    isRunning = false;
+  }
+
+  $: displayedHeading = (360 - Math.round(currentAngle) + 360) % 360;
+  $: cardinalName = getCardinal(displayedHeading);
+  $: headingFormatted = String(displayedHeading).padStart(3, '0') + '°';
 
   const loadCalibration = () => {
     try {
@@ -292,9 +367,13 @@
     loadCalibration();
     window.addEventListener('message', handleMessage);
     window.addEventListener('keydown', handleKeyDown);
+    if ($VehicleHudStore.show || DebugStore || isCalibrating) {
+      startLoop();
+    }
   });
 
   onDestroy(() => {
+    stopLoop();
     window.removeEventListener('message', handleMessage);
     window.removeEventListener('keydown', handleKeyDown);
   });
@@ -318,79 +397,47 @@
         <div class="axis-guide-x" />
         <div class="axis-guide-y" />
       {:else}
-        <!-- Top Aerodynamic GPS / Navigation Pill (Zero blur to prevent CEF black box) -->
-        <div class="gps-pill">
-          <div class="heading-badge">
-            <span class="compass-icon">🧭</span>
-            <span class="heading-text">{cardinalName} • {headingFormatted}</span>
+        <!-- Integrated Machined Header (Flush Mounted on Top Rim) -->
+        <div class="header-flush">
+          <div class="header-bearing">
+            <span class="bearing-icon">🧭</span>
+            <span class="bearing-deg">{headingFormatted}</span>
+            <span class="bearing-cardinal">{cardinalName}</span>
           </div>
-          <div class="street-info">
-            <span class="street-main">{$CompassHudStore.street1 || 'DISTRITO PAULISTA'}</span>
+
+          <div class="header-divider" />
+
+          <div class="header-location">
+            <span class="location-street">{$CompassHudStore.street1 || 'DISTRITO PAULISTA'}</span>
             {#if $CompassHudStore.street2}
-              <span class="street-cross">/ {$CompassHudStore.street2}</span>
+              <span class="location-cross">/ {$CompassHudStore.street2}</span>
             {/if}
             {#if $CompassHudStore.zone}
-              <span class="street-zone">• {$CompassHudStore.zone}</span>
+              <span class="location-zone">• {$CompassHudStore.zone}</span>
             {/if}
           </div>
         </div>
 
-        <!-- Outer Bezel Precision Chassis Lip -->
-        <div class="outer-bezel-lip" />
-
-        <!-- 4 Graduation Corner Ticks (45°, 135°, 225°, 315°) -->
-        {#each [45, 135, 225, 315] as deg}
+        <!-- Laser-etched Metric Graduation Ticks around the Rim (Every 45°) -->
+        {#each [0, 45, 90, 135, 180, 225, 270, 315] as deg}
           {@const tick = getCoord(deg)}
           <div
-            class="bezel-tick"
+            class="bezel-tick {deg % 90 === 0 ? 'major' : 'minor'}"
             style="left: {tick.left}%; top: {tick.top}%;"
           />
         {/each}
 
-        <!-- Fixed Vehicle Forward Vector Indicator at 12 o'clock -->
-        <div class="forward-heading-notch" title="Frente do Veículo">▲</div>
+        <!-- Fixed Vehicle Forward Notch at 12 o'clock -->
+        <div class="forward-notch" title="Frente do Veículo">▲</div>
 
-        <!-- Dynamic Rotating Compass Markers along the Oval Rim -->
-        <!-- North (N) Highlighted Amber Glowing Beacon -->
+        <!-- Machined Precision North Needle orbiting along the Bezel Rim -->
         <div
-          class="compass-marker north"
-          style="left: {northPos.left}%; top: {northPos.top}%;"
-          title="Norte Verdadeiro"
+          class="north-needle"
+          style="left: {northPos.left}%; top: {northPos.top}%; transform: translate(-50%, -50%) rotate({Math.round(currentAngle)}deg);"
+          title="Norte Verdadeiro ({headingFormatted})"
         >
-          N
-        </div>
-
-        <!-- East (E) -->
-        <div
-          class="compass-marker cardinal"
-          style="left: {eastPos.left}%; top: {eastPos.top}%;"
-          title="Leste"
-        >
-          E
-        </div>
-
-        <!-- South (S) -->
-        <div
-          class="compass-marker cardinal"
-          style="left: {southPos.left}%; top: {southPos.top}%;"
-          title="Sul"
-        >
-          S
-        </div>
-
-        <!-- West (W) -->
-        <div
-          class="compass-marker cardinal"
-          style="left: {westPos.left}%; top: {westPos.top}%;"
-          title="Oeste"
-        >
-          W
-        </div>
-
-        <!-- Bottom Micro Telemetry Badge -->
-        <div class="telemetry-badge">
-          <span class="pulse-dot" />
-          <span class="telemetry-label">SAT-NAV // DISTRITO PAULISTA</span>
+          <div class="needle-arrow" />
+          <span class="needle-label">N</span>
         </div>
       {/if}
     </div>
@@ -580,8 +627,12 @@
     user-select: none;
     background: transparent !important;
     border-style: solid;
-    border-color: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+    border-color: #1a1e27;
+    box-shadow: 
+      0 0 0 1.5px rgba(255, 149, 0, 0.75),
+      0 0 14px rgba(255, 149, 0, 0.35),
+      inset 0 0 0 1px rgba(255, 179, 0, 0.4),
+      0 6px 24px rgba(0, 0, 0, 0.85);
     z-index: 25;
     transition: none;
   }
@@ -634,30 +685,32 @@
     left: calc(max(0px, (100vw - 177.78vh) / 2) + 2.30vh);
     width: 28.5vh;
     height: 19.2vh;
-    border: 3.5px solid rgba(255, 255, 255, 0.95);
+    border: 3.5px solid #1a1e27;
     border-radius: 6px;
     box-sizing: border-box;
     pointer-events: none;
     user-select: none;
     background: transparent !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 0 0 1.5px rgba(255, 149, 0, 0.75), 0 2px 8px rgba(0, 0, 0, 0.5);
     z-index: 25;
   }
 
-  /* Tactical Navigation Pill (Top GPS) */
-  .gps-pill {
+  /* Integrated Machined Header (Flush Mounted on Top Rim) */
+  .header-flush {
     position: absolute;
-    top: -3.8vh;
+    bottom: calc(100% - 2px);
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(10, 14, 23, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 9999px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.75);
     display: flex;
     align-items: center;
     gap: 0.65vh;
-    padding: 0.3vh 0.9vh;
+    padding: 0.35vh 1vh;
+    background: rgba(14, 18, 25, 0.96);
+    border: 1px solid rgba(255, 179, 0, 0.4);
+    border-bottom: 1px solid #161a22;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.75), 0 0 10px rgba(255, 149, 0, 0.15);
     white-space: nowrap;
     pointer-events: none;
     font-family: 'Montserrat', sans-serif;
@@ -665,32 +718,40 @@
     max-width: 95%;
   }
 
-  .heading-badge {
+  .header-bearing {
     display: flex;
     align-items: center;
-    gap: 0.35vh;
-    background: rgba(255, 149, 0, 0.18);
-    border: 1px solid rgba(255, 149, 0, 0.5);
-    color: #ff9500;
-    font-size: 1.05vh;
+    gap: 0.3vh;
+    color: #ffb300;
     font-weight: 800;
-    padding: 0.15vh 0.55vh;
-    border-radius: 9999px;
-    letter-spacing: 0.04em;
+    font-size: 1.05vh;
+    letter-spacing: 0.03em;
     flex-shrink: 0;
   }
 
-  .compass-icon {
-    font-size: 1.0vh;
+  .bearing-icon {
+    font-size: 0.95vh;
     line-height: 1;
   }
 
-  .heading-text {
-    font-family: 'Montserrat', sans-serif;
+  .bearing-deg {
     font-variant-numeric: tabular-nums;
+    color: #ffd54f;
   }
 
-  .street-info {
+  .bearing-cardinal {
+    color: #ff9500;
+    font-weight: 900;
+  }
+
+  .header-divider {
+    width: 1px;
+    height: 1.2vh;
+    background: rgba(255, 255, 255, 0.15);
+    flex-shrink: 0;
+  }
+
+  .header-location {
     display: flex;
     align-items: center;
     gap: 0.4vh;
@@ -698,7 +759,7 @@
     text-overflow: ellipsis;
   }
 
-  .street-main {
+  .location-street {
     font-size: 1.15vh;
     font-weight: 800;
     color: #ffffff;
@@ -706,128 +767,87 @@
     text-transform: uppercase;
   }
 
-  .street-cross {
+  .location-cross {
     font-size: 1.0vh;
     font-weight: 600;
     color: rgba(255, 255, 255, 0.65);
     text-transform: uppercase;
   }
 
-  .street-zone {
+  .location-zone {
     font-size: 0.95vh;
     font-weight: 700;
-    color: #ff9500;
+    color: #ffb300;
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
 
-  /* Outer Bezel Chassis & Ticks */
-  .outer-bezel-lip {
-    position: absolute;
-    inset: -5px;
-    border-radius: 50%;
-    border: 1.5px solid rgba(255, 255, 255, 0.22);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
-    pointer-events: none;
-  }
-
+  /* Laser-etched Metric Graduation Ticks */
   .bezel-tick {
     position: absolute;
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.45);
     transform: translate(-50%, -50%);
     pointer-events: none;
-    box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+  }
+
+  .bezel-tick.major {
+    width: 5px;
+    height: 5px;
+    background: #ffb300;
+    box-shadow: 0 0 6px #ff9500;
+  }
+
+  .bezel-tick.minor {
+    width: 3px;
+    height: 3px;
+    background: rgba(255, 179, 0, 0.45);
   }
 
   /* Fixed Vehicle Forward Notch */
-  .forward-heading-notch {
+  .forward-notch {
     position: absolute;
-    top: -9px;
+    top: -5px;
     left: 50%;
     transform: translateX(-50%);
-    color: #ffffff;
-    font-size: 10px;
+    color: #ffd54f;
+    font-size: 8px;
     line-height: 1;
-    text-shadow: 0 0 6px rgba(255, 255, 255, 0.8), 0 2px 4px rgba(0, 0, 0, 0.9);
+    text-shadow: 0 0 6px #ff9500;
     pointer-events: none;
     z-index: 31;
   }
 
-  /* Dynamic Rotating Compass Markers */
-  .compass-marker {
+  /* Machined Precision North Needle */
+  .north-needle {
     position: absolute;
-    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 18px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     pointer-events: none;
-    user-select: none;
-    font-family: 'Montserrat', sans-serif;
-    transition: left 0.35s ease-out, top 0.35s ease-out;
+    z-index: 32;
+    transition: none;
   }
 
-  .compass-marker.north {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: rgba(13, 17, 28, 0.94);
-    border: 1.5px solid #ff9500;
-    color: #ff9500;
-    font-size: 11px;
+  .needle-arrow {
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 7px solid #ffb300;
+    filter: drop-shadow(0 0 4px #ff9500);
+  }
+
+  .needle-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 8px;
     font-weight: 900;
-    box-shadow: 0 0 10px rgba(255, 149, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.7);
-    z-index: 33;
-  }
-
-  .compass-marker.cardinal {
-    width: 17px;
-    height: 17px;
-    border-radius: 50%;
-    background: rgba(13, 17, 28, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 9px;
-    font-weight: 800;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.6);
-    z-index: 30;
-  }
-
-  /* Bottom Micro Telemetry Badge */
-  .telemetry-badge {
-    position: absolute;
-    bottom: -2.3vh;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 0.45vh;
-    pointer-events: none;
-    background: rgba(10, 14, 23, 0.82);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 4px;
-    padding: 0.2vh 0.65vh;
-    z-index: 28;
-    white-space: nowrap;
-  }
-
-  .pulse-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: #22c55e;
-    box-shadow: 0 0 6px #22c55e;
-  }
-
-  .telemetry-label {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 0.75vh;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.7);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    color: #ffd54f;
+    line-height: 1;
+    margin-top: 1px;
+    text-shadow: 0 0 4px rgba(255, 149, 0, 0.8), 0 1px 2px rgba(0, 0, 0, 0.9);
   }
 
   /* Calibration Modal UI */

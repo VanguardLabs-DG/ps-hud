@@ -75,7 +75,8 @@ components:
     bottom: "6.20vh"
     width: "27.60vh"
     height: "23.82vh"
-    border: "6.0px solid rgba(255, 255, 255, 0.95)"
+    border: "6.0px solid #FF9500"
+    glow: "0 0 16px rgba(255, 149, 0, 0.45)"
     borderRadius: "50%"
 ---
 

@@ -8,7 +8,6 @@
   import DebugStore from './stores/debugStore';
   import PlayerHudStore from './stores/playerStatusHudStore';
   import MapBorder from "./components/map-border-hud.svelte";
-  import CompassHud from './components/compass-hud.svelte';
   import MoneyHud from './components/money-hud.svelte';
   import CreativeDriftSpeedometer from './components/CreativeDriftSpeedometer.svelte';
 
@@ -52,7 +51,6 @@
 
 <main class="{DebugStore ? 'bg-dark-300' :'bg-transparent'} min-h-screen">
   {#if !$MenuStore.isCineamticModeChecked }
-    <CompassHud />
     <MoneyHud />
     <CreativeTopHud />
     <CreativeStatusHud />
