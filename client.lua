@@ -205,7 +205,8 @@ local function openMapCalibration()
     SetNuiFocus(true, true)
     SendNUIMessage({
         action = "mapcalibrate",
-        open = true
+        open = true,
+        shape = Menu.isToggleMapShapeChecked or "circle"
     })
 end
 
@@ -219,20 +220,22 @@ RegisterNUICallback('saveMapCalibration', function(data, cb)
     if not IsPedInAnyVehicle(player, false) and not Menu.isOutMapChecked then
         DisplayRadar(false)
     end
+    local shape = data.shape or (Menu.isToggleMapShapeChecked or "circle")
     local left = tonumber(data.left) or 0
     local bottom = tonumber(data.bottom) or 0
     local width = tonumber(data.width) or tonumber(data.size) or 0
     local height = tonumber(data.height) or tonumber(data.size) or 0
     local borderWidth = tonumber(data.borderWidth) or 3.5
     local borderRadius = tonumber(data.borderRadius) or 50
-    local coordStr = string.format("left = %.2fvh, bottom = %.2fvh, width = %.2fvh, height = %.2fvh, border = %.1fpx", left, bottom, width, height, borderWidth)
-    print(string.format("^2[CALIBRAÇÃO MINIMAPA]^7 %s", coordStr))
+    local radiusStr = shape == "square" and string.format(", radius = %.1fpx", borderRadius) or ""
+    local coordStr = string.format("left = %.2fvh, bottom = %.2fvh, width = %.2fvh, height = %.2fvh, border = %.1fpx%s", left, bottom, width, height, borderWidth, radiusStr)
+    print(string.format("^2[CALIBRAÇÃO MINIMAPA %s]^7 %s", string.upper(shape), coordStr))
     TriggerEvent("chat:addMessage", {
         color = { 0, 255, 128 },
         multiline = true,
-        args = { "HUD", string.format("Calibração salva! Coordenadas: %s (copie e envie ao assistente)", coordStr) }
+        args = { "HUD", string.format("Calibração [%s] salva! Coordenadas: %s (copie e envie ao assistente)", string.upper(shape), coordStr) }
     })
-    QBCore.Functions.Notify(string.format("Calibração salva: %s", coordStr), "success", 8000)
+    QBCore.Functions.Notify(string.format("Calibração [%s] salva: %s", string.upper(shape), coordStr), "success", 8000)
 end)
 
 RegisterNUICallback('closeMapCalibration', function(_, cb)
@@ -1283,17 +1286,7 @@ RegisterNetEvent('hud:client:ShowAccounts', function(type, amount)
 end)
 
 RegisterNetEvent('hud:client:OnMoneyChange', function(type, amount, isMinus)
-    cashAmount = PlayerData.money['cash']
-    bankAmount = PlayerData.money['bank']
-		if type == 'cash' and amount == 0 then return end
-    SendNUIMessage({
-        action = 'updatemoney',
-        cash = cashAmount,
-        bank = bankAmount,
-        amount = amount,
-        minus = isMinus,
-        type = type
-    })
+    -- Desabilitado: popup de transação financeira no canto superior direito
 end)
 
 -- Harness Check / Seatbelt Check

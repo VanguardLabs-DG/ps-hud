@@ -70,14 +70,47 @@ components:
     width: "{spacing.gauge-width}"
     height: "{spacing.gauge-height}"
     position: "bottom-right, right: calc(1.5rem - 42px), bottom: 6.2rem"
+  # Vanguard Lib - Distrito Paulista Identity Tokens
+  vanguard-gold: "#e5a93c"
+  vanguard-gold-l: "#f5b945"
+  vanguard-gold-d: "#b37e20"
+  vanguard-gold-glow: "rgba(229, 169, 60, 0.25)"
+  vanguard-bg-primary: "#0b0e14"
+  vanguard-bg-surface: "#0e0f18"
+
   minimap-border:
     left: "2.30vh"
     bottom: "6.20vh"
     width: "27.60vh"
     height: "23.82vh"
-    border: "6.0px solid #FF9500"
-    glow: "0 0 16px rgba(255, 149, 0, 0.45)"
+    border: "6.0px solid #0b0e14"
+    outerLine: "1.5px solid #f5b945"
+    innerFeather: "inset 0 0 10px 2px rgba(11, 14, 20, 0.85)"
     borderRadius: "50%"
+  minimap-square-border:
+    left: "0.75vh"
+    bottom: "5.70vh"
+    width: "29.85vh"
+    height: "19.25vh"
+    border: "4.0px solid #0b0e14"
+    outerLine: "1.5px solid #f5b945"
+    innerFeather: "inset 0 0 10px 2px rgba(11, 14, 20, 0.85)"
+    borderRadius: "6.0px"
+    rayBoxTracking: "Perimeter ray-box intersection for compass needle and laser ticks"
+  floating-street-hud:
+    position: "bottom: calc(100% + 0.8vh), centered"
+    layout: "2 compact lines (Line 1: street + cross; Line 2: zone + bearing)"
+    backdropFog: "extended pseudo-element (inset -1.8vh -4.5vh) with 5-stop cubic decay to 0% at 82%"
+    colors:
+      streetPrimary: "#FFFFFF"
+      streetSecondary: "#d4d4d8"
+      zoneTag: "#e5a93c"
+      bearingText: "#f5b945"
+  vanguard-widgets:
+    cardBackground: "rgba(11, 14, 20, 0.82)"
+    cardBorder: "1px solid rgba(245, 185, 69, 0.45)"
+    cardBorderInner: "1px solid rgba(229, 169, 60, 0.35)"
+    goldHighlight: "#f5b945"
 ---
 
 # Distrito Paulista - Creative Diamond HUD Design Specification
