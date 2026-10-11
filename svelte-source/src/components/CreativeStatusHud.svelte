@@ -15,7 +15,6 @@
   $: armorVal = isDesign ? designVal : ($PlayerHudStore.icons.armor?.progressValue ?? 0);
   $: hungerVal = isDesign ? designVal : ($PlayerHudStore.icons.hunger?.progressValue ?? 100);
   $: thirstVal = isDesign ? designVal : ($PlayerHudStore.icons.thirst?.progressValue ?? 100);
-  $: oxygenVal = isDesign ? designVal : ($PlayerHudStore.icons.oxygen?.progressValue ?? 100);
   $: staminaVal = isDesign ? designVal : ($PlayerHudStore.stamina ?? 100);
 
   // Colors from ColorEffectStore or default authentic tokens
@@ -23,7 +22,6 @@
   $: armorColor = $ColorEffectStore.icons.armor?.colorEffects[0]?.progressColor || "#3B82F6";
   $: hungerColor = $ColorEffectStore.icons.hunger?.colorEffects[0]?.progressColor || "#F97316";
   $: thirstColor = $ColorEffectStore.icons.thirst?.colorEffects[0]?.progressColor || "#06B6D4";
-  $: oxygenColor = $ColorEffectStore.icons.oxygen?.colorEffects[0]?.progressColor || "#84CC16";
   $: staminaColor = "#10B981";
 
   // Dynamic vertical offset when inside a vehicle with right-positioned speedometer
@@ -62,15 +60,6 @@
       color: thirstColor,
       visible: true,
       icon: "thirst"
-    },
-    {
-      id: "oxygen",
-      name: "oxygen",
-      val: Math.round(oxygenVal),
-      color: oxygenColor,
-      // 1:1 legacy rule: oxygen auto-hides when 100%
-      visible: isDesign || oxygenVal < 100,
-      icon: "oxygen"
     },
     {
       id: "stamina",
@@ -159,10 +148,6 @@
             {:else if item.icon === 'thirst'}
               <svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor">
                 <path d="M6 0L5.40857 0.571086L5.40429 0.574569L5.39057 0.587627C5.31634 0.660214 5.24319 0.73393 5.17114 0.808749C4.29545 1.70875 3.48316 2.67019 2.74029 3.68595C1.44171 5.46363 0 7.9482 0 10.3448C0 13.5389 2.75914 16 6 16C9.24086 16 12 13.5389 12 10.3457C12 7.94907 10.5574 5.4645 9.26057 3.68595C8.46881 2.60422 7.59838 1.58427 6.65657 0.634637L6.60943 0.587627L6.59571 0.574569L6.59229 0.571086L6 0ZM4.36971 10.4441C4.29764 10.2268 4.1441 10.0472 3.94243 9.94428C3.74076 9.84132 3.50724 9.8233 3.29258 9.89414C3.07791 9.96498 2.89942 10.119 2.79585 10.3227C2.69229 10.5264 2.67201 10.7633 2.73943 10.9821C2.96315 11.6815 3.39911 12.2909 3.98484 12.7232C4.57056 13.1554 5.27598 13.3883 6 13.3883C6.22733 13.3883 6.44535 13.2966 6.60609 13.1333C6.76684 12.9701 6.85714 12.7487 6.85714 12.5178C6.85714 12.2869 6.76684 12.0654 6.60609 11.9022C6.44535 11.7389 6.22733 11.6472 6 11.6472C5.63799 11.6472 5.28528 11.5308 4.99242 11.3146C4.69956 11.0985 4.48157 10.7938 4.36971 10.4441Z"/>
-              </svg>
-            {:else if item.icon === 'oxygen'}
-              <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor">
-                <path d="M5.56397 1C5.56397 0.446875 5.99179 0 6.52132 0H7.47868C8.00821 0 8.43603 0.446875 8.43603 1V5.40312L12.0859 3.20312C12.5437 2.92812 13.1301 3.09062 13.3933 3.56875L13.872 4.43437C14.1353 4.9125 13.9797 5.525 13.522 5.8L9.87206 8L13.522 10.2C13.9797 10.475 14.1353 11.0875 13.872 11.5656L13.3933 12.4312C13.1301 12.9094 12.5437 13.075 12.0859 12.7969L8.43603 10.5969V15C8.43603 15.5531 8.00821 16 7.47868 16H6.52132C5.99179 16 5.56397 15.5531 5.56397 15V10.5969L1.91406 12.8C1.45633 13.075 0.869946 12.9125 0.606674 12.4344L0.127997 11.5688C-0.135275 11.0906 0.020295 10.4781 0.47803 10.2031L4.12794 8L0.47803 5.8C0.020295 5.525 -0.135275 4.9125 0.127997 4.43437L0.606674 3.56875C0.869946 3.0875 1.45633 2.925 1.91406 3.2L5.56397 5.4V1Z"/>
               </svg>
             {:else if item.icon === 'stamina'}
               <svg width="14" height="18" viewBox="0 0 14 18" fill="currentColor">

@@ -9,6 +9,7 @@ import LayoutStore from '../stores/layoutStore';
 import VehicleHudStore from '../stores/vehicleHudStore';
 import ColorEffectStore from '../stores/colorEffectStore';
 import ProfileStore from '../stores/profileStore';
+import presetStore from '../stores/presetStore';
 import { colorStoreLocalStorageName,
          playerStoreLocalStorageName,
          layoutStoreLocalStorageName,
@@ -83,7 +84,7 @@ export function EventHandler() {
         }
         break;
       case "open":
-        MenuStore.receiveMessage();
+        MenuStore.receiveMessage(event.data);
         break;
       case "show":
         MoneyHudStore.receiveShowAccountsMessage(event.data as any);
@@ -96,6 +97,11 @@ export function EventHandler() {
         break;
       case "updatemoney":
         MoneyHudStore.receiveUpdateMessage(event.data as any);
+        break;
+      case "setPreset":
+        if (event.data.presetId) {
+          presetStore.receivePresetFromClient(event.data.presetId);
+        }
         break;
       case "updateUISettings":
         if (!event.data.icons || !event.data.layout || !event.data.colors) {

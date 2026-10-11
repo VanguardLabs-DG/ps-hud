@@ -31,6 +31,7 @@ local showSquareB = false
 local CinematicHeight = 0.2
 local w = 0
 local radioTalking = false
+local activePreset = "dp-original-beta"
 local Menu = {
     isOutMapChecked = true, -- isOutMapChecked
     isOutCompassChecked = true, -- isOutCompassChecked
@@ -99,7 +100,20 @@ end
 local function loadSettings()
     QBCore.Functions.Notify(Lang:t("notify.hud_settings_loaded"), "success")
     Wait(1000)
+    local savedPreset = GetResourceKvpString("hud_active_preset")
+    if savedPreset and savedPreset ~= "" then
+        activePreset = savedPreset
+        if activePreset == "minimal-glass" then
+            Menu.isToggleMapShapeChecked = "square"
+        end
+    end
     TriggerEvent("hud:client:LoadMap")
+    if savedPreset and savedPreset ~= "" then
+        SendNUIMessage({
+            action = "setPreset",
+            presetId = savedPreset
+        })
+    end
 end
 
 local function SendAdminStatus()
@@ -183,21 +197,94 @@ AddEventHandler("pma-voice:radioActive", function(isRadioTalking)
     radioTalking = isRadioTalking
 end)
 
-local function openHudMenu()
+local function openHudMenu(targetTab)
     Wait(50)
     if showMenu then return end
     TriggerEvent("hud:client:playOpenMenuSounds")
     SetNuiFocus(true, true)
-    SendNUIMessage({ action = "open" })
+    SendNUIMessage({
+        action = "open",
+        tab = (type(targetTab) == "string") and targetTab or nil
+    })
     showMenu = true
 end
 
 -- Callbacks & Events
-RegisterCommand('menu', openHudMenu)
-RegisterCommand('hud', openHudMenu)
-RegisterCommand('hudmenu', openHudMenu)
+RegisterCommand('menu', function() openHudMenu() end)
+RegisterCommand('hud', function() openHudMenu() end)
+RegisterCommand('hudmenu', function() openHudMenu() end)
 RegisterNetEvent('ps-hud:client:openMenu', openHudMenu)
 exports('openMenu', openHudMenu)
+
+-- HUD Presets System (/preset [nome])
+local function applyPreset(presetId)
+    if not presetId or presetId == "" then
+        openHudMenu("presets")
+        return
+    end
+
+    local pLower = string.lower(presetId)
+    local resolvedId = "dp-original-beta"
+    local resolvedName = "Distrito Paulista (Original / Fase Beta)"
+
+    if pLower == "minimal" or pLower == "clean" or pLower == "glass" or pLower == "moderno" or pLower == "minimal-glass" then
+        resolvedId = "minimal-glass"
+        resolvedName = "Minimalista Glass (Clean Modern)"
+    elseif pLower == "beta" or pLower == "dp" or pLower == "original" or pLower == "creative" or pLower == "default" or pLower == "dp-original-beta" then
+        resolvedId = "dp-original-beta"
+        resolvedName = "Distrito Paulista (Original / Fase Beta)"
+    else
+        QBCore.Functions.Notify("Preset desconhecido. Use: /preset beta ou /preset minimal (ou apenas /preset para ver os cards)", "error", 6000)
+        return
+    end
+
+    activePreset = resolvedId
+    if activePreset == "minimal-glass" then
+        Menu.isToggleMapShapeChecked = "square"
+    end
+    SetResourceKvp("hud_active_preset", resolvedId)
+    SendNUIMessage({
+        action = "setPreset",
+        presetId = resolvedId
+    })
+    TriggerEvent("hud:client:LoadMap")
+
+    TriggerEvent("hud:client:playHudChecklistSound")
+    QBCore.Functions.Notify("Preset de HUD ativado: " .. resolvedName, "success", 5000)
+    TriggerEvent("chat:addMessage", {
+        color = { 245, 185, 69 },
+        multiline = true,
+        args = { "HUD", "Preset de interface alterado para: ^2" .. resolvedName .. "^7" }
+    })
+end
+
+RegisterCommand('preset', function(_, args)
+    local target = args[1]
+    applyPreset(target)
+end)
+
+RegisterCommand('presets', function(_, args)
+    local target = args[1]
+    applyPreset(target)
+end)
+
+RegisterCommand('hudpreset', function(_, args)
+    local target = args[1]
+    applyPreset(target)
+end)
+
+RegisterNUICallback('saveActivePreset', function(data, cb)
+    cb({})
+    if data.presetId then
+        activePreset = tostring(data.presetId)
+        if activePreset == "minimal-glass" then
+            Menu.isToggleMapShapeChecked = "square"
+        end
+        SetResourceKvp("hud_active_preset", activePreset)
+        TriggerEvent("hud:client:LoadMap")
+        TriggerEvent("hud:client:playHudChecklistSound")
+    end
+end)
 
 -- Minimap Calibration Tool (/calibrarmapa)
 local function openMapCalibration()
@@ -482,6 +569,10 @@ RegisterNetEvent("hud:client:LoadMap", function()
     if aspectRatio > defaultAspectRatio then
         minimapOffset = ((defaultAspectRatio-aspectRatio)/3.6)-0.008
     end
+    if activePreset == "minimal-glass" then
+        Menu.isToggleMapShapeChecked = "square"
+    end
+
     if Menu.isToggleMapShapeChecked == "square" then
         RequestStreamedTextureDict("squaremap", false)
         if not HasStreamedTextureDictLoaded("squaremap") then
@@ -562,6 +653,9 @@ end)
 RegisterNUICallback('ToggleMapShape', function(data, cb)
     cb({})
     Wait(50)
+    if activePreset == "minimal-glass" then
+        return
+    end
     if Menu.isMapEnabledChecked then
         Menu.isToggleMapShapeChecked = data.shape
         Wait(50)
@@ -1016,13 +1110,13 @@ CreateThread(function()
             parachute = GetPedParachuteState(player)
 
             -- Stamina
-            if not IsEntityInWater(player) then
-                oxygen = 100 - GetPlayerSprintStaminaRemaining(playerId)
-            end
+            stamina = math.max(0, math.min(100, math.floor(100.0 - GetPlayerSprintStaminaRemaining(playerId))))
 
-            -- Oxygen
+            -- Oxygen (only when in water)
             if IsEntityInWater(player) then
-                oxygen = GetPlayerUnderwaterTimeRemaining(playerId) * 10
+                oxygen = math.max(0, math.min(100, math.floor(GetPlayerUnderwaterTimeRemaining(playerId) * 10)))
+            else
+                oxygen = 100
             end
 
             -- Voice & Radio setup
@@ -1090,7 +1184,7 @@ CreateThread(function()
                     -1,
                     Menu.isCineamticModeChecked,
                     dev,
-                    math.max(0, math.min(100, math.floor(100.0 - GetPlayerSprintStaminaRemaining(PlayerId())))),
+                    stamina,
                     tostring(citizenid),
                     voiceMode,
                 })
@@ -1134,7 +1228,7 @@ CreateThread(function()
                     (GetVehicleEngineHealth(vehicle) / 10),
                     Menu.isCineamticModeChecked,
                     dev,
-                    math.max(0, math.min(100, math.floor(100.0 - GetPlayerSprintStaminaRemaining(PlayerId())))),
+                    stamina,
                     tostring(citizenid),
                     voiceMode,
                 })

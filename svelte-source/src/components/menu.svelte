@@ -1,11 +1,12 @@
 <script lang="ts">
   import { draggable } from '@neodrag/svelte';
-  import { faSliders, faCircleNotch } from '@fortawesome/free-solid-svg-icons'
+  import { faSliders, faCircleNotch, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
   import Fa from 'svelte-fa'
 
   import MenuStore from '../stores/menuStore';
 
   import HudPanel from './menu/hudPanel.svelte';
+  import PresetsPanel from './menu/presetsPanel.svelte';
   import StatusIconsPanel from './menu/statusIconsPanel.svelte';
 
   let menuHandle;
@@ -14,12 +15,22 @@
 
   let tabArray: Array<{name: string, icon: any, content: any, adminOnly: boolean}> = [
     { name: "Hud Settings", icon: faSliders,     content: HudPanel, adminOnly: false },
+    { name: "Presets de HUD", icon: faLayerGroup, content: PresetsPanel, adminOnly: false },
     { name: "Status Icons", icon: faCircleNotch, content: StatusIconsPanel, adminOnly: true },
   ];
   let activeTab: {name: string, icon: any, content: any} = tabArray[0];
 
   function handleTabClick(index: number) {
     activeTab = tabArray[index];
+  }
+
+  $: if ($MenuStore.targetTab) {
+    const q = $MenuStore.targetTab.toLowerCase();
+    const found = tabArray.find(t => t.name.toLowerCase().includes(q));
+    if (found) {
+      activeTab = found;
+      $MenuStore.targetTab = null;
+    }
   }
 </script>
 

@@ -25,7 +25,8 @@ type menuStatus = {
   isShowCompassChecked: boolean,
   isShowStreetsChecked: boolean,
   isToggleMapBordersChecked: boolean, 
-  isToggleMapShapeChecked: "circle" | "square"
+  isToggleMapShapeChecked: "circle" | "square",
+  targetTab?: string | null,
 }
 
 const store = () => {
@@ -95,14 +96,15 @@ const store = () => {
         methods.closeMenu();
       }
     },
-    openMenu() {
+    openMenu(tab?: string) {
       update(state => {
         state.show = true;
+        state.targetTab = tab || null;
         return state;
       });
     },
-    receiveMessage() {
-      methods.openMenu();
+    receiveMessage(data?: any) {
+      methods.openMenu(data?.tab);
     },
     receiveAdminMessage(data: { adminOnly: boolean, isAdmin: boolean }) {
       update(state => {

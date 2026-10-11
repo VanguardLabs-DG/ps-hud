@@ -111,22 +111,84 @@ components:
     cardBorder: "1px solid rgba(245, 185, 69, 0.45)"
     cardBorderInner: "1px solid rgba(229, 169, 60, 0.35)"
     goldHighlight: "#f5b945"
+  minimal-integrated-header-dock:
+    position: "flush atop square minimap bezel as a single unified machined glass cluster"
+    radar-native-coordinates:
+      left: "0.75vh"
+      bottom: "5.70vh"
+      width: "29.85vh"
+      height: "19.25vh"
+      border: "1px hairline rgba(255, 255, 255, 0.09)"
+      radius: "12px (bottom-left/right: 12px; top-left/right: 0px for seamless fusion)"
+    seamless-fusion: "bottom: calc(100% + var(--square-border-w, 1px)); border-bottom: none; border-radius: 12px 12px 0 0; background: rgba(11, 14, 20, 0.85); border: 1px solid rgba(255, 255, 255, 0.09)"
+    box-shadow: "0 8px 24px rgba(0, 0, 0, 0.60), 0 0 0 1px rgba(0, 0, 0, 0.40)"
+    tactical-ticks: "DESATIVADOS no preset minimal (zero tiques militares, zero agulha pesada)"
+    fluid-transition:
+      duration: "350ms entering, 300ms exiting with coordinated vertical fly animation"
+      on-foot-dock: "in:fly={{ y: -24, duration: 350 }} / out:fly={{ y: -24, duration: 300 }}"
+      in-vehicle-bezel: "in:fly={{ y: 24, duration: 380 }} / out:fly={{ y: 24, duration: 300 }}"
+    story-1-telemetry:
+      height: "26px"
+      font-street: "Montserrat 11px font-black uppercase tracking-wider #FFFFFF"
+      bairros-removed: "Sem bairro/distrito; exibe exclusivamente nome da rua e rumo/bússola"
+      font-bearing: "Montserrat 10px font-black #00f0ff (cyan racing glow)"
+      divider: "1px solid rgba(255, 255, 255, 0.08)"
+    story-2-status-bars:
+      channels-height: "3px"
+      border-radius: "9999px"
+      background-channel: "rgba(255, 255, 255, 0.08)"
+      colors:
+        health: "#DC0616"
+        armor: "#3B82F6"
+        hunger: "#F97316"
+        thirst: "#06B6D4"
+        stamina: "#10B981"
+        oxygen: "#84CC16"
+        stress: "#EC4899"
+  minimal-status-dock:
+    position: "bottom: 2.0vh, left: calc(safezone + 0.75vh)"
+    background: "rgba(11, 14, 20, 0.85)"
+    border: "1px solid rgba(255, 255, 255, 0.09)"
+    borderRadius: "12px"
+    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.60), 0 0 0 1px rgba(0, 0, 0, 0.40)"
+  minimal-top-hud:
+    position: "top: 20px, right: 24px"
+    background: "rgba(11, 14, 20, 0.85)"
+    border: "1px solid rgba(255, 255, 255, 0.09)"
+    borderRadius: "12px"
+    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.60), 0 0 0 1px rgba(0, 0, 0, 0.40)"
+    backdropFilterPolicy: "STRICTLY NONE (zero CEF black-box fallback)"
 ---
 
-# Distrito Paulista - Creative Diamond HUD Design Specification
+# Distrito Paulista - Creative Diamond HUD & Minimalist Glass Design Specification
 
 ## Overview
-A HUD do Distrito Paulista busca aliar a estabilidade moderna e flexibilidade do `ps-hud` à identidade visual clássica do preset **Creative** (losangos rotacionados em 45º com preenchimento interno limpo e ícones centralizados retos).
+A HUD do Distrito Paulista busca aliar a estabilidade moderna e flexibilidade do `ps-hud` à identidade visual clássica do preset **Creative** (losangos rotacionados em 45º com preenchimento interno limpo e ícones centralizados retos), bem como ao preset contemporâneo **Minimalista Glass** (estrutura Triple-A com minimapa square, moldura e visor fundidos como 1 elemento só e telemetria exclusiva de ruas).
 
 ## The Diamond / Creative Shape Problem & Solution
 - **Problema no ps-hud original**: O preset `diamond-ring` padrão do ps-hud é um SVG alongado com contorno fino e animação de progresso circular (`stroke-dashoffset`). Isso faz com que ele pareça esticado verticalmente e desproporcional em relação à HUD que o usuário ama.
 - **Solução Creative**: O formato autêntico é um quadrado de cantos arredondados (`size: 30px`, `border-radius: 5px`) rotacionado a **45 graus** (`transform: rotate(45deg)`). O preenchimento de progresso (vida, colete, fome, sede) ocorre verticalmente ou em gradiente linear, e o ícone interno é compensado com `rotate(-45deg)` para ficar 100% reto e legível.
 
-## Colors & Hierarchy
-- As cores de status seguem a paleta vibrante de alta visibilidade sobre qualquer fundo de jogo.
-- Fundo escuro translúcido com `backdrop-blur(6px)` e borda de 2px na cor do status correspondente.
-- Nível de preenchimento a 35% de opacidade da cor principal, garantindo contraste total com o ícone branco em primeiro plano.
+## Preset Minimalista Glass (Triple-A Clean Modern)
+- **Eliminação do Frame Preto (Zero Backdrop-Filter em CEF)**: No Chromium Embedded Framework do FiveM sobre viewports transparentes DirectX, qualquer `backdrop-filter: blur()` gera uma camada de raster preta opaca ("tela preta"). O estilo Minimalista Glass utiliza exclusivamente superfícies RGBA semi-transparentes (`rgba(11, 14, 20, 0.85)`) com bordas sutis hairline (`1px solid rgba(255, 255, 255, 0.09)`) e drop shadows profundos, garantindo 100% de transparência real.
+- **Homogeneização Total com o Velocímetro**:
+  - Todos os componentes do preset (Velocímetro, Moldura + Visor Integrado, Dock a pé e Top Bar) compartilham exatamente o mesmo design system: acabamento em vidro escuro translúcido (`rgba(11, 14, 20, 0.85)`), borda hairline de 1px (`rgba(255, 255, 255, 0.09)`), cantos chanfrados em `12px` e sombra profunda com oclusão ambiente (`0 8px 24px rgba(0, 0, 0, 0.60), 0 0 0 1px rgba(0, 0, 0, 0.40)`).
+- **Moldura Homogênea em Vidro Escuro & Visor Integrado (1 Elemento Só)**:
+  - A moldura do minimapa (`.square`) agora é usinada com o mesmo material de vidro escuro do visor (`border-color: rgba(11, 14, 20, 0.85)` com 4px de espessura e dupla linha hairline externa/interna de 1px `rgba(255, 255, 255, 0.09)`), eliminando a sensação de borda transparente invisível.
+  - O visor repousa diretamente sobre a borda externa superior do minimapa square (`bottom: calc(100% + var(--square-border-w, 4px))`), com as laterais alinhadas perfeitamente às arestas externas (`left/right: calc(var(--square-border-w, 4px) * -1)`).
+  - A moldura quadrada tem os cantos superiores retos (`border-top-left-radius: 0; border-top-right-radius: 0`) para fusão contínua com a base do visor, e cantos inferiores arredondados em `12px`.
+  - Tiques de bússola a laser, agulha volumosa e notch militar permanecem **desativados** no preset Minimal.
+  - **Apenas a Rua Atual do Player**: Removidas todas as ruas paralelas e cruzamentos secundários (`street2`) tanto no preset Minimal quanto no Beta Original. Exibe exclusivamente a rua atual em que o jogador se encontra (`street1`) e o rumo digital.
+- **Top Bar Redesenhada com Micro-Badges do Velocímetro (`MinimalTopHud.svelte`)**:
+  - Módulos de Passaporte, VoIP e Rádio construídos na mesma linguagem do velocímetro:
+    - Micro-badges táteis (`22x22px`, `border-radius: 5px`) com cores de estado dedicadas (verde `#10b981`, azul `#60a5fa`, dim).
+    - Equalizador vertical esportivo para VoIP (barras verticais com alturas progressivas que acendem em verde esmeralda ao falar).
+    - Status de frequência nítido (`100.5 MHz` ou `OFF`) e ID com tipografia tabular limpa em caixa alta.
 
-## Layout & Placement
-- **Posicionamento**: Canto inferior direito para os status (vida, colete, fome, sede, estresse, mic) em linha horizontal com `gap: 10px`.
-- **Velocímetro**: Integrado sobre o minimapa ou canto inferior direito quando dentro de veículos, com KM/H e display de marcha.
+## Sistema de Presets de HUD
+- **Registry Extensível**: `src/presets/registry.ts`
+- **Presets Ativos**:
+  1. `dp-original-beta`: Padrão Oficial do Distrito Paulista (losangos Creative 45°, velocímetro DriftArc, moldura Vanguard âmbar/titânio e widgets superiores).
+  2. `minimal-glass`: Estilo aerodinâmico contemporâneo Triple-A (status sob o minimapa elevado, velocímetro digital limpo no canto inferior direito, cápsula superior e moldura ultra-fina).
+- **Persistência**: Híbrido KVP do FiveM (`SetResourceKvp("hud_active_preset")`) + `localStorage`.
+- **Comandos**: `/preset`, `/presets`, `/hudpreset [nome/alias]`.

@@ -7,8 +7,12 @@
   import { fetchNui } from '../../utils/eventHandler';
   import PlayerHudStore from '../../stores/playerStatusHudStore';
   import { absoluteMapDimensions } from '../../types/types';
+  import presetStore from '../../stores/presetStore';
+
+  $: isMinimalGlass = $presetStore.activePreset.id === 'minimal-glass';
 
   function handleIsToggleMapShapeChecked(checked: boolean) {
+    if (isMinimalGlass) return;
     let shape: "circle" | "square" = checked ? "circle": "square";
     $MenuStore.isToggleMapShapeChecked = shape;
     fetchNui("ToggleMapShape", {shape: shape})
@@ -145,12 +149,22 @@
     <p>Vehicle</p>
   </div>
   <div class="mx-4 mb-4 flex flex-col">
-    <Switch checked={$MenuStore.isToggleMapShapeChecked == "circle"} checkedText="Minimap Circle" unCheckedText="Minimap Square"
-      handleUpdateFunction={(checked) => handleIsToggleMapShapeChecked(checked)}
-    />
-    <p class="font-semibold text-base pb-2">
-      Whether it's square or circle you desire, you have the ability to choose!
-    </p>
+    {#if isMinimalGlass}
+      <div class="flex items-center justify-between py-2 px-3 rounded bg-white/5 border border-white/10 mb-2">
+        <div class="flex flex-col">
+          <span class="text-white font-semibold">Minimap Square</span>
+          <span class="text-xs text-amber-400">🔒 Fixo Square (Preset Minimal Glass Integrado)</span>
+        </div>
+        <span class="text-xs px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded font-mono font-bold tracking-wider">LOCKED</span>
+      </div>
+    {:else}
+      <Switch checked={$MenuStore.isToggleMapShapeChecked == "circle"} checkedText="Minimap Circle" unCheckedText="Minimap Square"
+        handleUpdateFunction={(checked) => handleIsToggleMapShapeChecked(checked)}
+      />
+      <p class="font-semibold text-base pb-2">
+        Whether it's square or circle you desire, you have the ability to choose!
+      </p>
+    {/if}
 
     <Checkbox bind:checked={$MenuStore.isMapEnabledChecked}
       primaryText={"Minimap Enabled"} handleUpdateFunction={(checked) => fetchNui("HideMap", {checked})}

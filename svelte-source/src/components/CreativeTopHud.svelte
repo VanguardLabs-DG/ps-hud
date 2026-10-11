@@ -276,8 +276,8 @@
     justify-content: center;
     width: 100%;
     height: 100%;
-    color: #f5b945;
-    text-shadow: 0 0 6px rgba(229, 169, 60, 0.6);
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 4px rgba(255, 255, 255, 0.3);
   }
 
   /* VoIP volume bars */

@@ -10,6 +10,10 @@
   import MapBorder from "./components/map-border-hud.svelte";
   import MoneyHud from './components/money-hud.svelte';
   import CreativeDriftSpeedometer from './components/CreativeDriftSpeedometer.svelte';
+  import MinimalStatusHud from './components/presets/MinimalStatusHud.svelte';
+  import MinimalSpeedometer from './components/presets/MinimalSpeedometer.svelte';
+  import MinimalTopHud from './components/presets/MinimalTopHud.svelte';
+  import presetStore from './stores/presetStore';
 
   EventHandler();
 
@@ -52,9 +56,27 @@
 <main class="{DebugStore ? 'bg-dark-300' :'bg-transparent'} min-h-screen">
   {#if !$MenuStore.isCineamticModeChecked }
     <MoneyHud />
-    <CreativeTopHud />
-    <CreativeStatusHud />
-    <CreativeDriftSpeedometer />
+
+    {#if $presetStore.activePreset.config.topHudVisible}
+      {#if $presetStore.activePreset.config.topHudComponent === 'minimal'}
+        <MinimalTopHud />
+      {:else}
+        <CreativeTopHud />
+      {/if}
+    {/if}
+
+    {#if $presetStore.activePreset.config.statusComponent === 'minimal'}
+      <MinimalStatusHud />
+    {:else}
+      <CreativeStatusHud />
+    {/if}
+
+    {#if $presetStore.activePreset.config.speedometerComponent === 'minimal'}
+      <MinimalSpeedometer />
+    {:else}
+      <CreativeDriftSpeedometer />
+    {/if}
+
     <MapBorder />
   {/if}
   <Menu />
